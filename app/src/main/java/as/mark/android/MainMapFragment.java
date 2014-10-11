@@ -1,6 +1,8 @@
 package as.mark.android;
 
+import android.app.Activity;
 import android.app.FragmentTransaction;
+import android.location.Location;
 import android.support.annotation.Nullable;
 import android.app.Fragment;
 import android.os.Bundle;
@@ -8,16 +10,18 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-public class MainMapFragment extends Fragment {
+public class MainMapFragment extends Fragment implements LocationListener{
 
     private GoogleMap mMap; // Might be null if Google Play services APK is not available.
     private MapFragment mapFragment;
+    private LocationSubscriptionManager locationSubscriptionManager;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -37,6 +41,26 @@ public class MainMapFragment extends Fragment {
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
+    }
+
+    @Override
+    public void onAttach(Activity activity) {
+        super.onAttach(activity);
+        if(activity instanceof LocationSubscriptionManager){
+            locationSubscriptionManager = (LocationSubscriptionManager) activity;
+            locationSubscriptionManager.subscribeLocationUpdates(this);
+        }
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+
+        if(locationSubscriptionManager != null){
+            locationSubscriptionManager.removeSubscriptionLocationUpdates(this);
+            locationSubscriptionManager = null;
+        }
 
     }
 
@@ -81,6 +105,11 @@ public class MainMapFragment extends Fragment {
      * This should only be called once and when we are sure that {@link #mMap} is not null.
      */
     private void setUpMap() {
-        mMap.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker"));
+        //mMap.addMarker(new MarkerOptions().position(new LatLng(0, 0)).title("Marker"));
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+        mMap.addMarker(new MarkerOptions().position(new LatLng(location.getLatitude(), location.getLongitude())).title("Me"));
     }
 }
